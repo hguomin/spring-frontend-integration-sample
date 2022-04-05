@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>io.devplus</groupId>
+        <artifactId>spring-frontend-integration-sample</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+	</parent>
+	<groupId>io.devplus</groupId>
+	<artifactId>application</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>Web application project</name>
+	<description>Backend project for Spring Boot</description>
+
+	<packaging>jar</packaging>
+
+	<properties>
+		<java.version>8</java.version>
+		<node.version>v16.13.1</node.version>
+        <npm.version>8.6.0</npm.version>
+		<frontend.maven.plugin.version>1.12.1</frontend.maven.plugin.version>
+		<portalDir>${project.parent.basedir}/portal</portalDir>
+	</properties>
+	
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+	<profiles>
+		<!-- 2.1 调用前端项目中package.json定义的构建命令，Maven执行时可通过-P指定需要执行的profile: 例如：mvn clean install -P npm-build-dev -->
+		<profile>
+			<id>npm build production</id>
+			<activation>
+				<!-- 默认执行这个Profile -->
+				<activeByDefault>true</activeByDefault>
+				<property>
+					<name>npm-build-prod</name>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>com.github.eirslett</groupId>
+						<artifactId>frontend-maven-plugin</artifactId>
+						<version>${frontend.maven.plugin.version}</version>
+		
+						<configuration>
+							<!-- 前端项目的目录 -->
+							<workingDirectory>${portalDir}</workingDirectory>
+						</configuration>
+						
+						<executions>
+							<!-- 调用前端项目构建命令进行构建 -->
+							<execution>
+								<id>npm run build</id>
+								<goals>
+									<goal>npm</goal>
+								</goals>
+								<phase>compile</phase>
+								<configuration>
+									<!-- 前端项目的构建命令，需要根据package.json中定义的命令进行设置-->
+									<arguments>run build-prod</arguments>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>npm build development</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+				<property>
+					<name>npm-build-dev</name>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>com.github.eirslett</groupId>
+						<artifactId>frontend-maven-plugin</artifactId>
+						<version>${frontend.maven.plugin.version}</version>
+	
+						<configuration>
+							<!-- 前端项目的目录 -->
+							<workingDirectory>${portalDir}</workingDirectory>
+						</configuration>
+						
+						<executions>
+							<!-- 调用前端项目构建命令进行构建 -->
+							<execution>
+								<id>npm run build-dev</id>
+								<goals>
+									<goal>npm</goal>
+								</goals>
+								<phase>compile</phase>
+								<configuration>
+									<!-- 前端项目的构建命令，需要根据package.json中定义的命令进行设置-->
+									<arguments>run build-dev</arguments>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
+	<build>
+		<plugins>
+			<!-- 将项目依赖的包都打包到所生成的jar包中-->
+			<!--plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>repackage</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin-->
+			<!-- 1. 利用maven-clean-plugin插件在编译前删除前端拷贝过来的文件 -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <!-- 后端项目中前端资源文件目录 -->
+                            <directory>${baseDir}/src/main/resources/static</directory>
+                        </fileset>
+                    </filesets>
+                </configuration>
+			</plugin>
+			<!-- 可配置源码和目标的java版本 -->
+			<!--plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+			</plugin-->
+
+			<!-- 2. 前端项目构建的配置：安装node和npm、执行npm install下载依赖、以及package.json定义的构建命令 -->
+			<plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <!-- Use the latest released version:
+                https://repo1.maven.org/maven2/com/github/eirslett/frontend-maven-plugin/ -->
+                <version>${frontend.maven.plugin.version}</version>
+
+				<configuration>
+					<!-- 前端项目的目录 -->
+                    <workingDirectory>${project.parent.basedir}/portal</workingDirectory>
+
+					<nodeVersion>${node.version}</nodeVersion>
+                    <npmVersion>${npm.version}</npmVersion>
+					
+					<!-- node和npm的安装目录 -->
+					<installDirectory>${project.parent.basedir}/portal/target/dev-tools</installDirectory> 
+                    <!--nodeDownloadRoot>https://npm.taobao.org/mirrors/node/</nodeDownloadRoot>
+                    <npmDownloadRoot>https://registry.npm.taobao.org/npm/-/</npmDownloadRoot-->
+                    
+                </configuration>
+
+                <executions>
+					<!-- 本地安装node和npm -->
+                    <execution>
+                        <id>install node and npm</id>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                    </execution>
+					<!-- 下载npm依赖 -->
+                    <execution>
+                        <id>npm install</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <arguments>install</arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+			<!-- 3. 资源插件从前端项目复制打包好的前端资源文件到后端项目中 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>copy frontend resource files</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <!-- 复制前端资源文件到此文件夹中，可根据项目需要进行自定义设置-->
+                            <outputDirectory>${basedir}/src/main/resources/static</outputDirectory>
+                            <overwrite>true</overwrite>
+                            <resources>
+                                <resource>
+                                    <!-- 根据项目实际设置前端项目所生成的资源文件目录，将会从此目录中拷贝相应的文件或目录 -->
+                                    <directory>${portalDir}/dist</directory>
+                                    <includes>
+                                        <!-- 根据项目实际指定需要拷贝的前端资源目录或文件 -->
+										<include>*.*</include>
+                                        <!--include>favicon.ico</include>
+                                        <include>index.html</include>
+										<include>js/</include-->
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+		</plugins>
+	</build>
+</project>
