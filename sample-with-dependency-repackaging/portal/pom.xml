@@ -104,6 +104,7 @@
         <!-- 0. 指定打包的前端资源文件目录，即前端项目的输出-->
         <resources>
             <resource>
+				<!-- 注意前端项目生成的资源文件必须放到此目录下的static或public目录下，否则后端项目无法找到前端资源，因为static/public是Spring boot的默认前端资源文件目录 -->
                 <directory>${basedir}/dist</directory>
             </resource>
         </resources>
