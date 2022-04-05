@@ -39,7 +39,7 @@
 		
 						<configuration>
 							<!-- 前端项目的目录 -->
-							<workingDirectory>${portalDir}</workingDirectory>
+							<workingDirectory>${basedir}</workingDirectory>
 						</configuration>
 						
 						<executions>
@@ -77,7 +77,7 @@
 	
 						<configuration>
 							<!-- 前端项目的目录 -->
-							<workingDirectory>${portalDir}</workingDirectory>
+							<workingDirectory>${basedir}</workingDirectory>
 						</configuration>
 						
 						<executions>
